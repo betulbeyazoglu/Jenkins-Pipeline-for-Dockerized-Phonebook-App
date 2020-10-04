@@ -57,7 +57,7 @@ pipeline {
         stage ('Creating infrastructure') {
             steps { 
             echo ' Creating infrastructure for the app'
-            sh 'aws cloudformation create-stack --stack-name ${AWS_STACK_NAME} --template-body file://project-204-cfn-template.yml --parameters ParameterKey=KeyPairName,ParameterValue=${CFN_KEYPAIR} --region ${AWS_REGION} --capabilities CAPABILITY_IAM '
+            sh 'aws cloudformation create-stack --stack-name ${AWS_STACK_NAME} --template-body file://Project-204-cfn-template.yml --parameters ParameterKey=KeyPairName,ParameterValue=${CFN_KEYPAIR} --region ${AWS_REGION} --capabilities CAPABILITY_IAM '
             
             script {
                     while(true){
