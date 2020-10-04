@@ -96,8 +96,6 @@ pipeline {
         }
 
         stage ('Deploy the App') {
-            steps { 
-            echo ' Deploying the App on Docker Swarm'
             environment {
                 MASTER_INSTANCE_ID = sh(script:'aws ec2 describe-instances --region ${AWS_REGION} --filters Name=tag-value,Values=docker-grand-master Name=tag-value,Values=${AWS_STACK_NAME} --query Reservations[*].Instances[*].[InstanceId] --output text', returnStdout:true).trim()
             }
@@ -146,5 +144,5 @@ pipeline {
                 sh 'aws cloudformation delete-stack --region ${AWS_REGION} --stack-name ${AWS_STACK_NAME}'      
             }
         }    
-        
+    }   
 }       
