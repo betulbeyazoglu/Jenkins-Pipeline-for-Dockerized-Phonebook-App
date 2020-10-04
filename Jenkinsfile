@@ -10,7 +10,7 @@ pipeline {
         HOME_FOLDER = "/home/ec2-user"
         GIT_FOLDER = sh(script:'echo ${GIT_URL} | sed "s/.*\\///;s/.git$//"', returnStdout:true).trim()
         PATH=sh(script:"echo $PATH:/usr/local/bin", returnStdout:true).trim()
-        APP_NAME="Phonebook"
+        APP_NAME="phonebook"
 
     }
     stages { 
