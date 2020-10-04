@@ -1,0 +1,40 @@
+version: "3.8"
+services:
+  website:
+    image: 375516740190.dkr.ecr.us-east-1.amazonaws.com/bb4it/project-204:latest # bb4it/project-204
+    deploy:
+        mode: global
+        update_config:
+          parallelism: 2
+          delay: 5s
+          order: start-first
+    ports:
+      - "80:80"
+    networks:
+      - whitenet
+  
+  database:
+    image: mysql:5.7 
+    environment:
+      MYSQL_ROOT_PASSWORD: Bbeyaz
+      MYSQL_USER: bb4it
+      MYSQL_PASSWORD: bb4it.me
+      MYSQL_DATABASE: phonebook_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+    configs:
+      - source: initialdb
+        target: /docker-entrypoint-initdb.d/init.sql
+    networks:
+      - whitenet
+
+networks:
+  whitenet:
+    driver: overlay
+
+volumes:
+  mysql-data: 
+
+configs: 
+  initialdb:
+    file: ./init.sql
