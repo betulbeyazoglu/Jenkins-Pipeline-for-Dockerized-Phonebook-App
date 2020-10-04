@@ -49,9 +49,7 @@ pipeline {
         stage ('Creating infrastructure') {
             steps { 
             echo ' Creating infrastructure for the app'
-            sh 'ls -la'
-            //sh ' git clone https://github.com/betulbeyazoglu/Jenkins-Pipeline-for-Dockerized-Phonebook-Application'
-            sh 'aws cloudformation create-stack --stack-name project204 --template-body file:///var/lib/jenkins/workspace/project-204/Jenkins-Pipeline-for-Dockerized-Phonebook-Application/project204-cfn-template.yml --parameters ParameterKey=KeyPairName,ParameterValue=betul --region us-east-1 --capabilities CAPABILITY_IAM '
+            sh 'aws cloudformation create-stack --stack-name project204 --template-body file://project-204-cfn-template.yml --parameters ParameterKey=KeyPairName,ParameterValue=betul --region us-east-1 --capabilities CAPABILITY_IAM '
             }
         }
 
@@ -66,7 +64,6 @@ pipeline {
             steps { 
             echo ' Deploying the App on Docker Swarm'
             sh 'ls -la'
-            //sh ' git clone https://github.com/betulbeyazoglu/Jenkins-Pipeline-for-Dockerized-Phonebook-Application'
             sh 'aws cloudformation create-stack --stack-name project204 --template-body file:///var/lib/jenkins/workspace/project-204/Jenkins-Pipeline-for-Dockerized-Phonebook-Application/project204-cfn-template.yml --parameters ParameterKey=KeyPairName,ParameterValue=betul --region us-east-1 --capabilities CAPABILITY_IAM '
             }
         }
@@ -75,7 +72,6 @@ pipeline {
             steps { 
             echo ' Checkin App readiness'
             sh 'ls -la'
-            //sh ' git clone https://github.com/betulbeyazoglu/Jenkins-Pipeline-for-Dockerized-Phonebook-Application'
             sh 'aws cloudformation create-stack --stack-name project204 --template-body file:///var/lib/jenkins/workspace/project-204/Jenkins-Pipeline-for-Dockerized-Phonebook-Application/project204-cfn-template.yml --parameters ParameterKey=KeyPairName,ParameterValue=betul --region us-east-1 --capabilities CAPABILITY_IAM '
             }
         }

@@ -1,13 +1,14 @@
 AWSTemplateFormatVersion: 2010-09-09
-
+​
 Description: |
   This Cloudformation template creates a phonebook application web application developed in Python Flask , deployed with Docker Swarm on Elastic Compute Cloud (EC2) Instances by pulling the app images from the AWS Elastic Container Registry (ECR) repository
+​
 Parameters:
   KeyPairName:
     Description: Enter name of your key pair for SSH Connections
     Type: AWS::EC2::KeyPair::KeyName
     ConstraintDescription: Must be one of the existing KeyPairs 
-
+​
 Resources:
   InstanceConnectPolicy:
     Type: "AWS::IAM::ManagedPolicy"
@@ -39,7 +40,6 @@ Resources:
       ManagedPolicyArns:
         - !Ref InstanceConnectPolicy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess
-        
   EC2ConnectProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
@@ -157,46 +157,116 @@ Resources:
         - Key: Name
           Value: !Sub Docker Grand Master of ${AWS::StackName}
         - Key: project
-          Value: "203"
+          Value: "p204"
+        - Key: server
+          Value: docker-grand-master
       UserData:
-        Fn::Base64: 
-          !Sub 
-            - |
-              #! /bin/bash
-              yum update -y
-              hostnamectl set-hostname Grand-Master
-              amazon-linux-extras install docker -y
-              systemctl start docker
-              systemctl enable docker
-              usermod -a -G docker ec2-user
-              curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" \
-              -o /usr/local/bin/docker-compose
-              chmod +x /usr/local/bin/docker-compose
-              docker swarm init
-              docker service create \
-                --name=viz \
-                --publish=8080:8080/tcp \
-                --constraint=node.role==manager \
-                --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
-                dockersamples/visualizer
-              yum install git -y
-              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-              unzip awscliv2.zip
-              ./aws/install
-              yum install amazon-ecr-credential-helper -y
-              mkdir -p /home/ec2-user/.docker
-              cd /home/ec2-user/.docker
-              echo '{"credsStore": "ecr-login"}' > config.json
-              mkdir -p /home/ec2-user/phonebook
-              cd /home/ec2-user/phonebook
-              cat << EOF | tee .env
-              ECR_REGISTRY=${ECR_REGISTRY}
-              APP_REPO_NAME=${APP_REPO_NAME}
-              EOF
-              curl -o "docker-compose.yml" -L ${GIT_FILE_URL}docker-compose.yml
-              curl -o "init.sql" -L ${GIT_FILE_URL}init.sql
-              docker-compose config | docker stack deploy --with-registry-auth -c - phonebook
-            - ECR_REGISTRY: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
-              APP_REPO_NAME: clarusway-repo/phonebook-app
-              GITHUB_REPO: https://github.com/callahan-cw/project-203.git
-              GIT_FILE_URL: https://raw.githubusercontent.com/callahan-cw/project-203/master/
+        Fn::Base64: |
+          #! /bin/bash
+          yum update -y
+          hostnamectl set-hostname Grand-Master
+          amazon-linux-extras install docker -y
+          systemctl start docker
+          systemctl enable docker
+          usermod -a -G docker ec2-user
+          curl -L "https://github.com/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" \
+          -o /usr/local/bin/docker-compose
+          chmod +x /usr/local/bin/docker-compose
+          docker swarm init
+          docker service create \
+            --name=viz \
+            --publish=8080:8080/tcp \
+            --constraint=node.role==manager \
+            --mount=type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
+            dockersamples/visualizer
+          yum install git -y
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          ./aws/install
+          yum install amazon-ecr-credential-helper -y
+          mkdir -p /home/ec2-user/.docker
+          cd /home/ec2-user/.docker
+          echo '{"credsStore": "ecr-login"}' > config.json
+  DockerManager2:
+    Type: "AWS::EC2::Instance"
+    DependsOn:
+        - DockerManager1
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ManagersLT
+        Version: !GetAtt ManagersLT.LatestVersionNumber
+      Tags:
+        - Key: Name
+          Value: !Sub Docker Manager 2 of ${AWS::StackName}
+        - Key: project
+          Value: "p204"
+  DockerManager3:
+    Type: "AWS::EC2::Instance"
+    DependsOn:
+        - DockerManager2
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ManagersLT
+        Version: !GetAtt ManagersLT.LatestVersionNumber
+      Tags:
+        - Key: Name
+          Value: !Sub Docker Manager 3 of ${AWS::StackName}
+        - Key: project
+          Value: "p204"
+  DockerWorker1:
+    Type: "AWS::EC2::Instance"
+    DependsOn:
+        - DockerManager1
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WorkersLT
+        Version: !GetAtt WorkersLT.LatestVersionNumber
+      Tags:
+        - Key: Name
+          Value: !Sub Docker Worker 1 of ${AWS::StackName}
+        - Key: project
+          Value: "p204"
+  DockerWorker2:
+    Type: "AWS::EC2::Instance"
+    DependsOn:
+        - DockerWorker1
+    Properties:
+      LaunchTemplate:
+        LaunchTemplateId: !Ref WorkersLT
+        Version: !GetAtt WorkersLT.LatestVersionNumber
+      Tags:
+        - Key: Name
+          Value: !Sub Docker Worker 2 of ${AWS::StackName}
+        - Key: project
+          Value: "p204"
+Outputs:
+  VizDashboard:
+    Description: Dashboard URL
+    Value: !Sub 
+      - http://${PublicAddress}:8080
+      - PublicAddress: !GetAtt DockerManager1.PublicDnsName
+  1stManagerDNSName:
+    Description: Docker Manager 1st DNS Name
+    Value: !Sub 
+      - ${PublicAddress}
+      - PublicAddress: !GetAtt DockerManager1.PublicDnsName
+  2ndManagerDNSName:
+    Description: Docker Manager 2nd DNS Name
+    Value: !Sub 
+      - ${PublicAddress}
+      - PublicAddress: !GetAtt DockerManager2.PublicDnsName
+  3rdManagerDNSName:
+    Description: Docker Manager 3rd DNS Name
+    Value: !Sub 
+      - ${PublicAddress}
+      - PublicAddress: !GetAtt DockerManager3.PublicDnsName
+  1stWorkerDNSName:
+    Description: Docker Worker 1st DNS Name
+    Value: !Sub 
+      - ${PublicAddress}
+      - PublicAddress: !GetAtt DockerWorker1.PublicDnsName
+  2ndWorkerDNSName:
+    Description: Docker Worker 2nd DNS Name
+    Value: !Sub 
+      - ${PublicAddress}
+      - PublicAddress: !GetAtt DockerWorker2.PublicDnsName
