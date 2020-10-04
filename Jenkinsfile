@@ -136,7 +136,7 @@ pipeline {
                 echo 'Delete image repository from ECR on failure'
                 sh """
                 aws ecr delete-repository \
-                  --repository-name ${APP_REPO_NAME} \
+                  --repository-name ${REPO_NAME} \
                   --region ${AWS_REGION}\
                   --force
                 """
